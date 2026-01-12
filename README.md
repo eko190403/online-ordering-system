@@ -10,20 +10,20 @@ Aplikasi web modern untuk manajemen cafe dengan fitur QR Menu, pemesanan online 
 ## 📸 Screenshots
 
 ### Customer Interface
-![menu](public/picture/user_menu.png)
+![menu](picture/user_menu.png)
 *tampilan menu user*
 
-![Cart Checkout](public/picture/cart-checkout.png)
+![Cart Checkout](picture/cart-checkout.png)
 *Keranjang belanja & checkout dengan pilihan pembayaran*
 
 ![Order Tracking](public/picture/order-tracking.png)
 *Real-time order tracking untuk customer*
 
 ### Admin Panel
-![Dashboard](public/picture/dashboard_admin.png)
+![Dashboard](picture/dashboard_admin.png)
 *Dashboard analytics dengan grafik revenue & menu terlaris*
 
-![Menu Management](public/picture/kelola_menu.png)
+![Menu Management](picture/kelola_menu.png)
 *Kelola menu dengan upload foto*
 
 ---
