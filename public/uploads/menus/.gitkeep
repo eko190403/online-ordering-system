@@ -1,0 +1,4 @@
+# Folder ini untuk menyimpan gambar menu yang di-upload
+# File ini dibuat agar Git track folder ini (tapi tidak track isinya)
+*
+!.gitkeep
