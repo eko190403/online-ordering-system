@@ -4,69 +4,79 @@
 
 <?php $__env->startSection('content'); ?>
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2><i class="fas fa-utensils"></i> Kelola Menu</h2>
-    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addMenuModal">
-        <i class="fas fa-plus"></i> Tambah Menu
+    <div>
+        <h2 class="fw-bold mb-1"><i class="fas fa-utensils text-primary"></i> Kelola Menu</h2>
+        <p class="text-muted mb-0">Atur daftar makanan dan minuman</p>
+    </div>
+    <button class="btn btn-primary rounded-pill px-4 shadow-sm" data-bs-toggle="modal" data-bs-target="#addMenuModal">
+        <i class="fas fa-plus me-1"></i> Tambah Menu
     </button>
 </div>
 
 <div class="card">
-    <div class="card-body">
+    <div class="card-body p-0">
         <div class="table-responsive">
-            <table class="table table-hover">
+            <table class="table table-hover mb-0">
                 <thead>
                     <tr>
-                        <th>No</th>
-                        <th>Gambar</th>
-                        <th>Nama</th>
+                        <th class="ps-4">No</th>
+                        <th>Menu</th>
                         <th>Kategori</th>
                         <th>Harga</th>
                         <th>Deskripsi</th>
-                        <th>Aksi</th>
+                        <th class="pe-4 text-end">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php $__empty_1 = true; $__currentLoopData = $menus; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $index => $menu): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                         <tr>
-                            <td><?php echo e($index + 1); ?></td>
+                            <td class="ps-4 fw-medium text-muted"><?php echo e($index + 1); ?></td>
                             <td>
-                                <?php if($menu->photo): ?>
-                                    <img src="<?php echo e(asset('uploads/menus/'.$menu->photo)); ?>" 
-                                         style="width: 50px; height: 50px; object-fit: cover;" 
-                                         class="rounded">
-                                <?php else: ?>
-                                    <div class="bg-secondary text-white rounded d-flex align-items-center justify-content-center"
-                                         style="width: 50px; height: 50px;">
-                                        <i class="fas fa-image"></i>
-                                    </div>
-                                <?php endif; ?>
+                                <div class="d-flex align-items-center">
+                                    <?php if($menu->photo): ?>
+                                        <img src="<?php echo e(asset('uploads/menus/'.$menu->photo)); ?>" 
+                                             class="rounded me-3 object-fit-cover shadow-sm" 
+                                             style="width: 48px; height: 48px;">
+                                    <?php else: ?>
+                                        <div class="rounded bg-light text-secondary d-flex align-items-center justify-content-center me-3 shadow-sm"
+                                             style="width: 48px; height: 48px; border: 1px dashed #cbd5e1;">
+                                            <i class="fas fa-image"></i>
+                                        </div>
+                                    <?php endif; ?>
+                                    <strong class="text-dark"><?php echo e($menu->name); ?></strong>
+                                </div>
                             </td>
-                            <td><strong><?php echo e($menu->name); ?></strong></td>
-                            <td><?php echo e($menu->category->name); ?></td>
-                            <td>Rp <?php echo e(number_format($menu->price, 0, ',', '.')); ?></td>
-                            <td><?php echo e(Str::limit($menu->description, 50)); ?></td>
-                            <td>
-                                <button class="btn btn-sm btn-warning btn-edit" 
-                                        data-id="<?php echo e($menu->id); ?>"
-                                        data-name="<?php echo e($menu->name); ?>"
-                                        data-price="<?php echo e($menu->price); ?>"
-                                        data-description="<?php echo e($menu->description); ?>"
-                                        data-category="<?php echo e($menu->category_id); ?>">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <form action="<?php echo e(route('admin.menu.destroy', $menu->id)); ?>" 
-                                      method="POST" class="d-inline delete-form">
-                                    <?php echo csrf_field(); ?>
-                                    <?php echo method_field('DELETE'); ?>
-                                    <button type="button" class="btn btn-sm btn-danger delete-btn" data-name="<?php echo e($menu->name); ?>">
-                                        <i class="fas fa-trash"></i>
+                            <td><span class="badge badge-soft-secondary px-2 py-1 fs-6"><?php echo e($menu->category->name); ?></span></td>
+                            <td><strong class="text-success">Rp <?php echo e(number_format($menu->price, 0, ',', '.')); ?></strong></td>
+                            <td class="text-muted small" style="max-width: 250px;"><?php echo e(Str::limit($menu->description, 50)); ?></td>
+                            <td class="pe-4 text-end">
+                                <div class="d-flex gap-2 justify-content-end">
+                                    <button class="btn btn-sm btn-light border text-primary rounded-pill px-3 btn-edit shadow-sm" 
+                                            data-id="<?php echo e($menu->id); ?>"
+                                            data-name="<?php echo e($menu->name); ?>"
+                                            data-price="<?php echo e($menu->price); ?>"
+                                            data-description="<?php echo e($menu->description); ?>"
+                                            data-category="<?php echo e($menu->category_id); ?>"
+                                            title="Edit Menu">
+                                        <i class="fas fa-edit"></i> Edit
                                     </button>
-                                </form>
+                                    <form action="<?php echo e(route('admin.menu.destroy', $menu->id)); ?>" 
+                                          method="POST" class="d-inline delete-form">
+                                        <?php echo csrf_field(); ?>
+                                        <?php echo method_field('DELETE'); ?>
+                                        <button type="button" class="btn btn-sm btn-light border text-danger rounded-pill px-3 delete-btn shadow-sm" data-name="<?php echo e($menu->name); ?>" title="Hapus Menu">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
                             </td>
                         </tr>
                     <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                         <tr>
-                            <td colspan="7" class="text-center">Belum ada menu</td>
+                            <td colspan="6" class="text-center py-5">
+                                <i class="fas fa-utensils fa-3x text-muted opacity-25 mb-3"></i>
+                                <p class="text-muted mb-0">Belum ada menu</p>
+                            </td>
                         </tr>
                     <?php endif; ?>
                 </tbody>

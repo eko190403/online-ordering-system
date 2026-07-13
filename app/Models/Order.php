@@ -11,16 +11,31 @@ class Order extends Model
         'order_code',
         'customer_name',
         'table_number',
+        'user_id',
+        'promo_id',
+        'total_price',
+        'discount_amount',
+        'points_earned',
         'payment_method',
         'payment_status',
         'notes',
+        'snap_token',
         'status',
-        'total_price',
     ];
 
     // Relasi ke order_items
-    public function items(): HasMany
+    public function items()
     {
         return $this->hasMany(OrderItem::class);
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function promo()
+    {
+        return $this->belongsTo(Promo::class);
     }
 }

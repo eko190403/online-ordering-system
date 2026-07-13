@@ -4,23 +4,26 @@
 
 <?php $__env->startSection('content'); ?>
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2><i class="fas fa-boxes"></i> Manajemen Stok</h2>
-    <a href="<?php echo e(route('admin.stock.logs')); ?>" class="btn btn-info">
-        <i class="fas fa-history"></i> Riwayat Stok
+    <div>
+        <h2 class="fw-bold mb-1"><i class="fas fa-boxes text-primary"></i> Manajemen Stok</h2>
+        <p class="text-muted mb-0">Atur ketersediaan menu</p>
+    </div>
+    <a href="<?php echo e(route('admin.stock.logs')); ?>" class="btn btn-light border text-primary rounded-pill px-4 shadow-sm">
+        <i class="fas fa-history me-1"></i> Riwayat Stok
     </a>
 </div>
 
 <div class="card">
-    <div class="card-body">
+    <div class="card-body p-0">
         <div class="table-responsive">
-            <table class="table table-hover">
+            <table class="table table-hover mb-0">
                 <thead>
                     <tr>
-                        <th>No</th>
-                        <th>Menu</th>
-                        <th>Kategori</th>
-                        <th>Stok Tersedia</th>
-                        <th>Aksi</th>
+                        <th class="ps-4" style="width: 10%;">No</th>
+                        <th style="width: 35%;">Menu</th>
+                        <th style="width: 25%;">Kategori</th>
+                        <th style="width: 15%;">Status</th>
+                        <th class="pe-4 text-end" style="width: 15%;">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -30,22 +33,23 @@
                             $qty = $stock ? $stock->quantity : 0;
                         ?>
                         <tr>
-                            <td><?php echo e($index + 1); ?></td>
-                            <td><strong><?php echo e($menu->name); ?></strong></td>
-                            <td><?php echo e($menu->category->name); ?></td>
+                            <td class="ps-4 fw-medium text-muted"><?php echo e($index + 1); ?></td>
+                            <td><strong class="text-dark"><?php echo e($menu->name); ?></strong></td>
+                            <td><span class="badge badge-soft-secondary px-2 py-1 fs-6"><?php echo e($menu->category->name); ?></span></td>
                             <td>
                                 <?php if($qty > 0): ?>
-                                    <span class="badge bg-success">Tersedia</span>
+                                    <span class="badge badge-soft-success px-3 py-1 rounded-pill">Tersedia</span>
                                 <?php else: ?>
-                                    <span class="badge bg-danger">Habis</span>
+                                    <span class="badge badge-soft-danger px-3 py-1 rounded-pill">Habis</span>
                                 <?php endif; ?>
                             </td>
-                            <td>
-                                <button class="btn btn-sm btn-primary btn-stock-toggle" 
+                            <td class="pe-4 text-end">
+                                <button class="btn btn-sm btn-light border text-primary rounded-pill px-3 shadow-sm btn-stock-toggle" 
                                         data-id="<?php echo e($menu->id); ?>"
                                         data-name="<?php echo e($menu->name); ?>"
-                                        data-current="<?php echo e($qty > 0 ? 'tersedia' : 'habis'); ?>">
-                                    <i class="fas fa-exchange-alt"></i> Ubah Status
+                                        data-current="<?php echo e($qty > 0 ? 'tersedia' : 'habis'); ?>"
+                                        title="Ubah Status">
+                                    <i class="fas fa-exchange-alt"></i> Ubah
                                 </button>
                             </td>
                         </tr>

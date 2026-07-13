@@ -80,9 +80,15 @@ class AdminController extends Controller
             'status' => 'required|in:masuk,diproses,selesai'
         ]);
 
-        $order = Order::findOrFail($id);
+        $order = Order::with('user')->findOrFail($id);
         $order->status = $request->status;
         $order->save();
+        
+        // WA Simulation
+        if ($order->user && $order->user->phone) {
+            $msg = "[WHATSAPP SIMULATION] To: {$order->user->phone} - Pesanan Anda #{$order->order_code} saat ini berstatus: " . strtoupper($order->status);
+            \Illuminate\Support\Facades\Log::channel('single')->info($msg);
+        }
 
         return redirect()->back()->with('success', "Status order {$order->order_code} diubah menjadi {$order->status}");
     }

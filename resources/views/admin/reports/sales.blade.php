@@ -45,28 +45,42 @@
     </div>
 </div>
 
+@php
+    $totalPendapatan = $orders->where('status', 'selesai')->sum('total_price') - $orders->where('status', 'selesai')->sum('discount_amount');
+    $totalPengeluaran = isset($expenses) ? $expenses->sum('amount') : 0;
+    $labaBersih = $totalPendapatan - $totalPengeluaran;
+@endphp
+
 <div class="row mb-4">
-    <div class="col-md-4">
-        <div class="card bg-primary text-white">
-            <div class="card-body">
-                <h6>Total Pesanan</h6>
-                <h3>{{ $orders->count() }}</h3>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card bg-success text-white">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white border-0 shadow-sm rounded-4">
             <div class="card-body">
                 <h6>Pesanan Selesai</h6>
                 <h3>{{ $orders->where('status', 'selesai')->count() }}</h3>
             </div>
         </div>
     </div>
-    <div class="col-md-4">
-        <div class="card bg-info text-white">
+    <div class="col-md-3">
+        <div class="card bg-info text-white border-0 shadow-sm rounded-4">
             <div class="card-body">
                 <h6>Total Pendapatan</h6>
-                <h3>Rp {{ number_format($orders->where('status', 'selesai')->sum('total_price'), 0, ',', '.') }}</h3>
+                <h3>Rp {{ number_format($totalPendapatan, 0, ',', '.') }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-dark border-0 shadow-sm rounded-4">
+            <div class="card-body">
+                <h6>Total Pengeluaran</h6>
+                <h3>Rp {{ number_format($totalPengeluaran, 0, ',', '.') }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card {{ $labaBersih >= 0 ? 'bg-success' : 'bg-danger' }} text-white border-0 shadow-sm rounded-4">
+            <div class="card-body">
+                <h6>Laba Bersih</h6>
+                <h3>Rp {{ number_format($labaBersih, 0, ',', '.') }}</h3>
             </div>
         </div>
     </div>
@@ -115,6 +129,48 @@
                     <tr class="fw-bold">
                         <td colspan="4" class="text-end">Total Keseluruhan:</td>
                         <td colspan="2">Rp {{ number_format($orders->sum('total_price'), 0, ',', '.') }}</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="card mt-4">
+    <div class="card-body">
+        <h5 class="card-title mb-3">Detail Pengeluaran</h5>
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>No</th>
+                        <th>Tanggal</th>
+                        <th>Kategori</th>
+                        <th>Deskripsi</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if(isset($expenses) && count($expenses) > 0)
+                        @foreach($expenses as $index => $expense)
+                            <tr>
+                                <td>{{ $index + 1 }}</td>
+                                <td>{{ $expense->expense_date->format('d/m/Y') }}</td>
+                                <td><span class="badge bg-secondary">{{ $expense->category }}</span></td>
+                                <td>{{ $expense->description }}</td>
+                                <td><strong>Rp {{ number_format($expense->amount, 0, ',', '.') }}</strong></td>
+                            </tr>
+                        @endforeach
+                    @else
+                        <tr>
+                            <td colspan="5" class="text-center text-muted">Tidak ada pengeluaran di periode ini.</td>
+                        </tr>
+                    @endif
+                </tbody>
+                <tfoot>
+                    <tr class="fw-bold">
+                        <td colspan="4" class="text-end">Total Keseluruhan:</td>
+                        <td>Rp {{ number_format(isset($expenses) ? $expenses->sum('amount') : 0, 0, ',', '.') }}</td>
                     </tr>
                 </tfoot>
             </table>

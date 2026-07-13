@@ -80,18 +80,28 @@
         <strong>📅 Periode:</strong> {{ $periodLabel ?? 'Semua Periode' }}
     </div>
 
+    @php
+        $totalPendapatan = $orders->where('status', 'selesai')->sum('total_price') - $orders->where('status', 'selesai')->sum('discount_amount');
+        $totalPengeluaran = isset($expenses) ? $expenses->sum('amount') : 0;
+        $labaBersih = $totalPendapatan - $totalPengeluaran;
+    @endphp
+
     <div class="summary">
-        <div class="summary-item">
-            <strong>Total Pesanan</strong><br>
-            <h3 style="margin: 5px 0;">{{ $orders->count() }}</h3>
-        </div>
-        <div class="summary-item">
+        <div class="summary-item" style="width: 20%;">
             <strong>Pesanan Selesai</strong><br>
             <h3 style="margin: 5px 0;">{{ $orders->where('status', 'selesai')->count() }}</h3>
         </div>
-        <div class="summary-item">
+        <div class="summary-item" style="width: 22%;">
             <strong>Total Pendapatan</strong><br>
-            <h3 style="margin: 5px 0;">Rp {{ number_format($orders->where('status', 'selesai')->sum('total_price'), 0, ',', '.') }}</h3>
+            <h3 style="margin: 5px 0;">Rp {{ number_format($totalPendapatan, 0, ',', '.') }}</h3>
+        </div>
+        <div class="summary-item" style="width: 22%; border-left: 3px solid #ffc107;">
+            <strong>Total Pengeluaran</strong><br>
+            <h3 style="margin: 5px 0;">Rp {{ number_format($totalPengeluaran, 0, ',', '.') }}</h3>
+        </div>
+        <div class="summary-item" style="width: 22%; border-left: 3px solid {{ $labaBersih >= 0 ? '#28a745' : '#dc3545' }};">
+            <strong>Laba Bersih</strong><br>
+            <h3 style="margin: 5px 0;">Rp {{ number_format($labaBersih, 0, ',', '.') }}</h3>
         </div>
     </div>
 
@@ -132,8 +142,44 @@
         </tbody>
         <tfoot>
             <tr class="total-row">
-                <td colspan="6" style="text-align: right;"><strong>Total Keseluruhan:</strong></td>
+                <td colspan="6" style="text-align: right;"><strong>Total Pemasukan Kotor:</strong></td>
                 <td colspan="2"><strong>Rp {{ number_format($orders->sum('total_price'), 0, ',', '.') }}</strong></td>
+            </tr>
+        </tfoot>
+    </table>
+
+    <h3 style="margin-top: 30px;">Daftar Pengeluaran</h3>
+    <table>
+        <thead>
+            <tr>
+                <th width="5%">No</th>
+                <th width="15%">Tanggal</th>
+                <th width="20%">Kategori</th>
+                <th width="45%">Deskripsi</th>
+                <th width="15%">Jumlah</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if(isset($expenses) && count($expenses) > 0)
+                @foreach($expenses as $index => $expense)
+                    <tr>
+                        <td>{{ $index + 1 }}</td>
+                        <td>{{ $expense->expense_date->format('d/m/Y') }}</td>
+                        <td>{{ $expense->category }}</td>
+                        <td>{{ $expense->description }}</td>
+                        <td>Rp {{ number_format($expense->amount, 0, ',', '.') }}</td>
+                    </tr>
+                @endforeach
+            @else
+                <tr>
+                    <td colspan="5" style="text-align: center;">Tidak ada data pengeluaran</td>
+                </tr>
+            @endif
+        </tbody>
+        <tfoot>
+            <tr class="total-row">
+                <td colspan="4" style="text-align: right;"><strong>Total Pengeluaran:</strong></td>
+                <td><strong>Rp {{ number_format(isset($expenses) ? $expenses->sum('amount') : 0, 0, ',', '.') }}</strong></td>
             </tr>
         </tfoot>
     </table>

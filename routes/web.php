@@ -8,6 +8,11 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\MenuController;
 use App\Http\Controllers\StockController;
+use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\KitchenController;
+
+// Webhook untuk Midtrans
+Route::post('/payment/callback', [PaymentController::class, 'callback']);
 
 // Halaman QR Menu untuk Customer
 Route::get('/', [MenuController::class, 'index'])->name('menu.index');
@@ -18,6 +23,16 @@ Route::get('/track/{orderCode}', [OrderController::class, 'track'])->name('order
 
 // API untuk check order status (public)
 Route::get('/api/check-order-status/{orderCode}', [OrderController::class, 'checkStatus']);
+Route::post('/api/validate-promo', [\App\Http\Controllers\PromoController::class, 'validatePromo']);
+
+// Customer Auth Routes
+Route::get('/customer/register', [\App\Http\Controllers\CustomerController::class, 'showRegister'])->name('customer.register');
+Route::post('/customer/register', [\App\Http\Controllers\CustomerController::class, 'register']);
+Route::get('/customer/login', [\App\Http\Controllers\CustomerController::class, 'showLogin'])->name('customer.login');
+Route::post('/customer/login', [\App\Http\Controllers\CustomerController::class, 'login'])->middleware('throttle:10,5');
+Route::middleware(['auth'])->group(function () {
+    Route::get('/profile', [\App\Http\Controllers\CustomerController::class, 'profile'])->name('customer.profile');
+});
 
 // Auth Routes (with rate limiting)
 Route::get('/login', [UserController::class, 'showLogin'])->name('login');
@@ -56,11 +71,23 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::post('/stock/{menu}/update', [StockController::class, 'updateStock'])->name('stock.update');
     Route::get('/stock/logs', [StockController::class, 'logs'])->name('stock.logs');
     
-    // Sales Report
+    // Expenses
+    Route::get('/expenses', [\App\Http\Controllers\ExpenseController::class, 'index'])->name('expenses.index');
+    Route::post('/expenses', [\App\Http\Controllers\ExpenseController::class, 'store'])->name('expenses.store');
+    Route::delete('/expenses/{expense}', [\App\Http\Controllers\ExpenseController::class, 'destroy'])->name('expenses.destroy');
+    
+    // Sales & Financial Report
     Route::get('/reports/sales', [ReportController::class, 'index'])->name('reports.sales');
     Route::get('/reports/sales/excel', [ReportController::class, 'exportExcel'])->name('reports.excel');
     Route::get('/reports/sales/pdf', [ReportController::class, 'exportPdf'])->name('reports.pdf');
     
     // QR Code Generation
     Route::get('/qr-code', [AdminController::class, 'qrCode'])->name('qrcode');
+});
+
+// Kitchen Routes (Protected by auth)
+Route::middleware(['auth'])->prefix('kitchen')->name('kitchen.')->group(function () {
+    Route::get('/', [KitchenController::class, 'index'])->name('index');
+    Route::get('/api/orders', [KitchenController::class, 'getActiveOrders']);
+    Route::post('/api/orders/{id}/complete', [KitchenController::class, 'completeOrder']);
 });

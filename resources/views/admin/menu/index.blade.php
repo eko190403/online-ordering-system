@@ -4,69 +4,79 @@
 
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2><i class="fas fa-utensils"></i> Kelola Menu</h2>
-    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addMenuModal">
-        <i class="fas fa-plus"></i> Tambah Menu
+    <div>
+        <h2 class="fw-bold mb-1"><i class="fas fa-utensils text-primary"></i> Kelola Menu</h2>
+        <p class="text-muted mb-0">Atur daftar makanan dan minuman</p>
+    </div>
+    <button class="btn btn-primary rounded-pill px-4 shadow-sm" data-bs-toggle="modal" data-bs-target="#addMenuModal">
+        <i class="fas fa-plus me-1"></i> Tambah Menu
     </button>
 </div>
 
 <div class="card">
-    <div class="card-body">
+    <div class="card-body p-0">
         <div class="table-responsive">
-            <table class="table table-hover">
+            <table class="table table-hover mb-0">
                 <thead>
                     <tr>
-                        <th>No</th>
-                        <th>Gambar</th>
-                        <th>Nama</th>
+                        <th class="ps-4">No</th>
+                        <th>Menu</th>
                         <th>Kategori</th>
                         <th>Harga</th>
                         <th>Deskripsi</th>
-                        <th>Aksi</th>
+                        <th class="pe-4 text-end">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($menus as $index => $menu)
                         <tr>
-                            <td>{{ $index + 1 }}</td>
+                            <td class="ps-4 fw-medium text-muted">{{ $index + 1 }}</td>
                             <td>
-                                @if($menu->photo)
-                                    <img src="{{ asset('uploads/menus/'.$menu->photo) }}" 
-                                         style="width: 50px; height: 50px; object-fit: cover;" 
-                                         class="rounded">
-                                @else
-                                    <div class="bg-secondary text-white rounded d-flex align-items-center justify-content-center"
-                                         style="width: 50px; height: 50px;">
-                                        <i class="fas fa-image"></i>
-                                    </div>
-                                @endif
+                                <div class="d-flex align-items-center">
+                                    @if($menu->photo)
+                                        <img src="{{ asset('uploads/menus/'.$menu->photo) }}" 
+                                             class="rounded me-3 object-fit-cover shadow-sm" 
+                                             style="width: 48px; height: 48px;">
+                                    @else
+                                        <div class="rounded bg-light text-secondary d-flex align-items-center justify-content-center me-3 shadow-sm"
+                                             style="width: 48px; height: 48px; border: 1px dashed #cbd5e1;">
+                                            <i class="fas fa-image"></i>
+                                        </div>
+                                    @endif
+                                    <strong class="text-dark">{{ $menu->name }}</strong>
+                                </div>
                             </td>
-                            <td><strong>{{ $menu->name }}</strong></td>
-                            <td>{{ $menu->category->name }}</td>
-                            <td>Rp {{ number_format($menu->price, 0, ',', '.') }}</td>
-                            <td>{{ Str::limit($menu->description, 50) }}</td>
-                            <td>
-                                <button class="btn btn-sm btn-warning btn-edit" 
-                                        data-id="{{ $menu->id }}"
-                                        data-name="{{ $menu->name }}"
-                                        data-price="{{ $menu->price }}"
-                                        data-description="{{ $menu->description }}"
-                                        data-category="{{ $menu->category_id }}">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <form action="{{ route('admin.menu.destroy', $menu->id) }}" 
-                                      method="POST" class="d-inline delete-form">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="button" class="btn btn-sm btn-danger delete-btn" data-name="{{ $menu->name }}">
-                                        <i class="fas fa-trash"></i>
+                            <td><span class="badge badge-soft-secondary px-2 py-1 fs-6">{{ $menu->category->name }}</span></td>
+                            <td><strong class="text-success">Rp {{ number_format($menu->price, 0, ',', '.') }}</strong></td>
+                            <td class="text-muted small" style="max-width: 250px;">{{ Str::limit($menu->description, 50) }}</td>
+                            <td class="pe-4 text-end">
+                                <div class="d-flex gap-2 justify-content-end">
+                                    <button class="btn btn-sm btn-light border text-primary rounded-pill px-3 btn-edit shadow-sm" 
+                                            data-id="{{ $menu->id }}"
+                                            data-name="{{ $menu->name }}"
+                                            data-price="{{ $menu->price }}"
+                                            data-description="{{ $menu->description }}"
+                                            data-category="{{ $menu->category_id }}"
+                                            title="Edit Menu">
+                                        <i class="fas fa-edit"></i> Edit
                                     </button>
-                                </form>
+                                    <form action="{{ route('admin.menu.destroy', $menu->id) }}" 
+                                          method="POST" class="d-inline delete-form">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="button" class="btn btn-sm btn-light border text-danger rounded-pill px-3 delete-btn shadow-sm" data-name="{{ $menu->name }}" title="Hapus Menu">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="text-center">Belum ada menu</td>
+                            <td colspan="6" class="text-center py-5">
+                                <i class="fas fa-utensils fa-3x text-muted opacity-25 mb-3"></i>
+                                <p class="text-muted mb-0">Belum ada menu</p>
+                            </td>
                         </tr>
                     @endforelse
                 </tbody>

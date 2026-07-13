@@ -95,16 +95,28 @@ class AdminMenuController extends Controller
 
     public function categoryStore(Request $request)
     {
-        $request->validate(['name' => 'required|string|max:255']);
-        Category::create(['name' => $request->name]);
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'station' => 'required|in:Dapur,Bar'
+        ]);
+        Category::create([
+            'name' => $request->name,
+            'station' => $request->station
+        ]);
 
         return redirect()->route('admin.categories.index')->with('success', 'Kategori berhasil ditambahkan');
     }
 
     public function categoryUpdate(Request $request, Category $category)
     {
-        $request->validate(['name' => 'required|string|max:255']);
-        $category->update(['name' => $request->name]);
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'station' => 'required|in:Dapur,Bar'
+        ]);
+        $category->update([
+            'name' => $request->name,
+            'station' => $request->station
+        ]);
 
         return redirect()->route('admin.categories.index')->with('success', 'Kategori berhasil diupdate');
     }

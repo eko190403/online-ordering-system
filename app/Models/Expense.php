@@ -1,20 +1,22 @@
 <?php
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Category extends Model
+class Expense extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        'name',
-        'station',
+        'description',
+        'amount',
+        'expense_date',
+        'category'
     ];
 
-    public function menus()
-    {
-        return $this->hasMany(Menu::class);
-    }
+    protected $casts = [
+        'expense_date' => 'date'
+    ];
 }

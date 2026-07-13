@@ -19,6 +19,7 @@ class OrderController extends Controller
             'table_number' => 'required|string|max:10',
             'payment_method' => 'required|in:cash,qris',
             'notes' => 'nullable|string|max:500',
+            'promo_id' => 'nullable|exists:promos,id',
             'menu_items' => 'required|array',
             'menu_items.*.menu_id' => 'required|exists:menus,id',
             'menu_items.*.qty' => 'required|integer|min:1',
@@ -29,6 +30,33 @@ class OrderController extends Controller
         foreach ($request->menu_items as $item) {
             $menu = Menu::findOrFail($item['menu_id']);
             $totalPrice += $menu->price * $item['qty'];
+        }
+        
+        // Calculate Discount
+        $discountAmount = 0;
+        if ($request->promo_id) {
+            $promo = \App\Models\Promo::find($request->promo_id);
+            if ($promo && $promo->is_active && $totalPrice >= $promo->min_purchase) {
+                if ($promo->discount_type == 'percent') {
+                    $discountAmount = ($promo->discount_amount / 100) * $totalPrice;
+                } else {
+                    $discountAmount = $promo->discount_amount;
+                }
+                if ($discountAmount > $totalPrice) {
+                    $discountAmount = $totalPrice;
+                }
+            } else {
+                return response()->json(['success' => false, 'message' => 'Promo tidak valid.'], 422);
+            }
+        }
+        
+        $finalPrice = $totalPrice - $discountAmount;
+        $pointsEarned = 0;
+        
+        // Calculate points if customer is logged in (Rp 100 = 1 point)
+        $userId = auth('web')->check() && auth('web')->user()->role == 'customer' ? auth('web')->id() : null;
+        if ($userId) {
+            $pointsEarned = floor($finalPrice / 100);
         }
         
         // Check stock availability first
@@ -49,6 +77,7 @@ class OrderController extends Controller
             
             $order = Order::create([
                 'order_code' => $orderCode,
+                'user_id' => $userId,
                 'customer_name' => $request->customer_name,
                 'table_number' => $request->table_number,
                 'payment_method' => $request->payment_method,
@@ -56,7 +85,16 @@ class OrderController extends Controller
                 'notes' => $request->notes,
                 'status' => 'diproses',
                 'total_price' => $totalPrice,
+                'promo_id' => $request->promo_id,
+                'discount_amount' => $discountAmount,
+                'points_earned' => $pointsEarned,
             ]);
+            
+            if ($userId && $pointsEarned > 0) {
+                $user = \App\Models\User::find($userId);
+                $user->points += $pointsEarned;
+                $user->save();
+            }
 
             foreach ($request->menu_items as $item) {
                 $menu = Menu::findOrFail($item['menu_id']);
@@ -88,12 +126,50 @@ class OrderController extends Controller
             
             DB::commit();
             
+            $snapToken = null;
+            if ($request->payment_method === 'qris') {
+                $serverKey = config('midtrans.server_key');
+                
+                // Jika kunci Midtrans belum disetting, gunakan dummy
+                if (!$serverKey || strpos($serverKey, 'YOUR_SERVER_KEY') !== false) {
+                    $snapToken = 'dummy_token';
+                    
+                    // Otomatis tandai lunas untuk simulasi agar masuk ke KDS
+                    $order->payment_status = 'paid';
+                    $order->save();
+                } else {
+                    // Set Midtrans configuration
+                    \Midtrans\Config::$serverKey = $serverKey;
+                    \Midtrans\Config::$isProduction = config('midtrans.is_production');
+                    \Midtrans\Config::$isSanitized = config('midtrans.is_sanitized');
+                    \Midtrans\Config::$is3ds = config('midtrans.is_3ds');
+
+                    $params = [
+                        'transaction_details' => [
+                            'order_id' => $order->order_code,
+                            'gross_amount' => $finalPrice,
+                        ],
+                        'customer_details' => [
+                            'first_name' => $request->customer_name,
+                        ],
+                    ];
+
+                    try {
+                        $snapToken = \Midtrans\Snap::getSnapToken($params);
+                    } catch (\Exception $e) {
+                        \Log::error('Midtrans Snap Error: ' . $e->getMessage());
+                        $snapToken = 'dummy_token'; // Fallback
+                    }
+                }
+            }
+            
             return response()->json([
                 'success' => true, 
                 'order_id' => $order->id,
                 'order_code' => $order->order_code,
                 'total_price' => $totalPrice,
-                'payment_method' => $request->payment_method
+                'payment_method' => $request->payment_method,
+                'snap_token' => $snapToken
             ]);
             
         } catch (\Exception $e) {

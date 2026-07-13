@@ -6,6 +6,11 @@
     <meta name="csrf-token" content="<?php echo e(csrf_token()); ?>">
     <title><?php echo $__env->yieldContent('title', 'Admin Panel - Cafe D.Villa Lampung'); ?></title>
     
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome -->
@@ -14,24 +19,96 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     
     <style>
+        :root {
+            --primary-bg: #f4f7f6;
+            --sidebar-bg: #0f172a;
+            --sidebar-hover: rgba(255,255,255,0.08);
+            --sidebar-active: rgba(255,255,255,0.15);
+            --sidebar-color: #94a3b8;
+            --sidebar-color-active: #ffffff;
+        }
         body {
-            background-color: #f8f9fa;
+            background-color: var(--primary-bg);
+            font-family: 'Inter', sans-serif;
+            color: #334155;
         }
         .sidebar {
             min-height: 100vh;
-            background: #343a40;
+            background: var(--sidebar-bg);
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
         }
         .sidebar .nav-link {
-            color: #adb5bd;
-            padding: 0.75rem 1rem;
+            color: var(--sidebar-color);
+            padding: 0.8rem 1.2rem;
+            margin: 0.25rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            font-weight: 500;
         }
-        .sidebar .nav-link:hover, .sidebar .nav-link.active {
-            color: #fff;
-            background: #495057;
+        .sidebar .nav-link:hover {
+            color: var(--sidebar-color-active);
+            background: var(--sidebar-hover);
+            transform: translateX(3px);
+        }
+        .sidebar .nav-link.active {
+            color: var(--sidebar-color-active);
+            background: var(--sidebar-active);
+            box-shadow: inset 3px 0 0 #3b82f6;
         }
         .sidebar .nav-link i {
+            width: 24px;
+            text-align: center;
             margin-right: 0.5rem;
         }
+        
+        /* Modern Cards */
+        .card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .card:hover {
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -2px rgba(0,0,0,0.04);
+        }
+        .card-header {
+            background-color: #fff;
+            border-bottom: 1px solid #f1f5f9;
+            border-top-left-radius: 12px !important;
+            border-top-right-radius: 12px !important;
+            padding: 1rem 1.25rem;
+        }
+        
+        /* Modern Tables */
+        .table {
+            vertical-align: middle;
+        }
+        .table thead th {
+            background-color: #f8fafc;
+            color: #64748b;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+            border-bottom: none;
+            padding: 1rem;
+        }
+        .table tbody td {
+            padding: 1rem;
+            color: #475569;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .table-hover tbody tr:hover {
+            background-color: #f8fafc;
+        }
+        
+        /* Soft Badges */
+        .badge-soft-success { background-color: #dcfce7; color: #166534; }
+        .badge-soft-warning { background-color: #fef3c7; color: #92400e; }
+        .badge-soft-danger { background-color: #fee2e2; color: #991b1b; }
+        .badge-soft-info { background-color: #e0f2fe; color: #075985; }
+        .badge-soft-primary { background-color: #dbeafe; color: #1e40af; }
+        .badge-soft-secondary { background-color: #f1f5f9; color: #475569; }
     </style>
     
     <?php echo $__env->yieldContent('styles'); ?>
@@ -62,9 +139,11 @@
                        href="<?php echo e(route('admin.categories.index')); ?>">
                         <i class="fas fa-tags"></i> Kategori
                     </a>
-                    <a class="nav-link <?php echo e(request()->routeIs('admin.stock.*') ? 'active' : ''); ?>" 
-                       href="<?php echo e(route('admin.stock.index')); ?>">
-                        <i class="fas fa-boxes"></i> Stok
+                    <a class="nav-link <?php echo e(request()->routeIs('admin.stock.*') ? 'active' : ''); ?>" href="<?php echo e(route('admin.stock.index')); ?>">
+                        <i class="fas fa-boxes fa-fw"></i> Stok Menu
+                    </a>
+                    <a class="nav-link <?php echo e(request()->routeIs('admin.expenses.*') ? 'active' : ''); ?>" href="<?php echo e(route('admin.expenses.index')); ?>">
+                        <i class="fas fa-wallet fa-fw"></i> Pengeluaran
                     </a>
                     <a class="nav-link <?php echo e(request()->routeIs('admin.reports.*') ? 'active' : ''); ?>" 
                        href="<?php echo e(route('admin.reports.sales')); ?>">
@@ -73,6 +152,9 @@
                     <a class="nav-link <?php echo e(request()->routeIs('admin.qrcode') ? 'active' : ''); ?>" 
                        href="<?php echo e(route('admin.qrcode')); ?>">
                         <i class="fas fa-qrcode"></i> QR Code
+                    </a>
+                    <a class="nav-link" href="<?php echo e(route('kitchen.index')); ?>" target="_blank">
+                        <i class="fas fa-fire text-warning"></i> Layar Dapur (KDS)
                     </a>
                     <hr class="bg-secondary">
                     <form action="<?php echo e(route('logout')); ?>" method="POST">

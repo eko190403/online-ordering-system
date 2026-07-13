@@ -285,8 +285,27 @@
 
             <!-- Total -->
             <div class="total-box">
+                @if($order->discount_amount > 0)
+                <div class="d-flex justify-content-between mb-2 pb-2 border-bottom" style="border-color: rgba(255,255,255,0.2) !important;">
+                    <span>Subtotal</span>
+                    <span>Rp {{ number_format($order->total_price + $order->discount_amount, 0, ',', '.') }}</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2 pb-2 border-bottom text-warning" style="border-color: rgba(255,255,255,0.2) !important;">
+                    <span><i class="fas fa-ticket-alt"></i> Diskon</span>
+                    <span>- Rp {{ number_format($order->discount_amount, 0, ',', '.') }}</span>
+                </div>
+                @endif
+                
                 <div class="total-label">Total Pembayaran</div>
                 <div class="total-amount">Rp {{ number_format($order->total_price, 0, ',', '.') }}</div>
+                
+                @if($order->points_earned > 0)
+                <div class="mt-3 pt-3 border-top" style="border-color: rgba(255,255,255,0.2) !important;">
+                    <div style="font-size: 0.9rem;">
+                        <i class="fas fa-star text-warning"></i> Anda mendapatkan <strong>{{ $order->points_earned }} Poin Loyalitas</strong>!
+                    </div>
+                </div>
+                @endif
             </div>
 
             <!-- Back Button -->

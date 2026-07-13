@@ -3,7 +3,7 @@
 <?php $__env->startSection('title', 'Menu - Cafe'); ?>
 
 <?php $__env->startSection('content'); ?>
-<div class="container py-4">
+<div class="container-fluid py-4 px-3 px-lg-5">
     <div class="text-center mb-5">
         <h1 class="display-4 fw-bold text-gradient mb-2">
             <i class="fas fa-coffee"></i> Cafe D.Villa Lampung
@@ -32,7 +32,7 @@
     <?php endif; ?>
 
     <!-- Search Bar -->
-    <div class="mb-4">
+    <div class="mb-4 mx-auto" style="max-width: 800px;">
         <form method="GET" action="<?php echo e(route('menu.index')); ?>">
             <div class="input-group input-group-lg shadow-sm">
                 <span class="input-group-text bg-white border-end-0">
@@ -78,7 +78,7 @@
                 $stock = $menu->stock ? $menu->stock->quantity : 0;
                 $isOutOfStock = $stock <= 0;
             ?>
-            <div class="col-6 col-md-4 col-lg-3">
+            <div class="col-6 col-md-4 col-lg-3 col-xl-2">
                 <div class="card menu-card-hover h-100 border-0 shadow-sm <?php echo e($isOutOfStock ? 'opacity-50' : ''); ?>" 
                      style="<?php echo e($isOutOfStock ? 'cursor:not-allowed;' : 'cursor:pointer;'); ?>">
                     <div class="menu-detail position-relative overflow-hidden" 
@@ -233,9 +233,26 @@
                 <hr>
                 <div id="cartItems"></div>
                 <hr>
-                <div class="d-flex justify-content-between align-items-center">
-                    <h5>Total:</h5>
-                    <h5 class="text-success" id="cartTotal">Rp 0</h5>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Kode Promo <span class="text-muted">(Opsional)</span></label>
+                    <div class="input-group">
+                        <input type="text" id="promoCode" class="form-control" placeholder="Masukkan kode promo">
+                        <button class="btn btn-outline-primary" type="button" id="btnApplyPromo">Gunakan</button>
+                    </div>
+                    <small id="promoMessage" class="d-block mt-1"></small>
+                </div>
+                
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted">Subtotal:</span>
+                    <span id="cartSubtotal" class="fw-bold">Rp 0</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2 text-warning" id="discountRow" style="display: none !important;">
+                    <span><i class="fas fa-ticket-alt"></i> Diskon:</span>
+                    <span id="cartDiscount" class="fw-bold">- Rp 0</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center border-top pt-2 mt-2">
+                    <h5 class="mb-0">Total:</h5>
+                    <h5 class="text-success mb-0" id="cartTotal">Rp 0</h5>
                 </div>
             </div>
             <div class="modal-footer">
@@ -343,9 +360,15 @@
 <?php $__env->stopSection(); ?>
 
 <?php $__env->startSection('scripts'); ?>
+<script type="text/javascript"
+    src="<?php echo e(config('midtrans.is_production') ? 'https://app.midtrans.com/snap/snap.js' : 'https://app.sandbox.midtrans.com/snap/snap.js'); ?>"
+    data-client-key="<?php echo e(config('midtrans.client_key')); ?>"></script>
 <script>
 // Load cart dari localStorage
 let cart = JSON.parse(localStorage.getItem('cart')) || [];
+let activePromoId = null;
+let discountAmount = 0;
+let activePromoMinPurchase = 0;
 
 // Fungsi save cart ke localStorage
 function saveCart() {
@@ -388,7 +411,25 @@ function renderCart() {
     }
     
     $('#cartItems').html(html);
-    $('#cartTotal').text('Rp ' + total.toLocaleString('id-ID'));
+    $('#cartSubtotal').text('Rp ' + total.toLocaleString('id-ID'));
+    
+    if (activePromoId && total < activePromoMinPurchase) {
+        removePromo();
+    } else if (activePromoId) {
+        // Re-calculate if percent
+        if (window.activePromoType === 'percent') {
+            discountAmount = (window.activePromoValue / 100) * total;
+        }
+        if (discountAmount > total) discountAmount = total;
+        
+        $('#discountRow').attr('style', 'display: flex !important;');
+        $('#cartDiscount').text('- Rp ' + Math.round(discountAmount).toLocaleString('id-ID'));
+    }
+    
+    let finalTotal = total - discountAmount;
+    if (finalTotal < 0) finalTotal = 0;
+    
+    $('#cartTotal').text('Rp ' + Math.round(finalTotal).toLocaleString('id-ID'));
     $('#cartCount').text(cart.length);
 }
 
@@ -491,12 +532,72 @@ function updateQty(index, change) {
     renderCart();
 }
 
-// Remove item
+// Remove Item
 function removeItem(index) {
     cart.splice(index, 1);
     saveCart();
     renderCart();
 }
+
+function removePromo() {
+    activePromoId = null;
+    discountAmount = 0;
+    activePromoMinPurchase = 0;
+    $('#promoCode').val('');
+    $('#promoMessage').text('').removeClass('text-success text-danger');
+    $('#discountRow').attr('style', 'display: none !important;');
+    renderCart();
+}
+
+// Promo Code Logic
+$('#btnApplyPromo').on('click', function() {
+    const code = $('#promoCode').val().trim();
+    if (!code) return;
+    
+    const subtotalText = $('#cartSubtotal').text().replace(/[^0-9]/g, '');
+    const currentTotal = parseInt(subtotalText) || 0;
+    
+    if (currentTotal === 0) {
+        $('#promoMessage').text('Keranjang masih kosong').removeClass('text-success').addClass('text-danger');
+        return;
+    }
+    
+    const btn = $(this);
+    btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
+    
+    $.ajax({
+        url: '<?php echo e(url("/api/validate-promo")); ?>',
+        method: 'POST',
+        data: {
+            code: code,
+            total_amount: currentTotal
+        },
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        },
+        success: function(res) {
+            btn.prop('disabled', false).text('Gunakan');
+            if (res.success) {
+                activePromoId = res.promo_id;
+                discountAmount = res.discount_amount;
+                window.activePromoType = res.promo_type;
+                window.activePromoValue = res.promo_value;
+                activePromoMinPurchase = res.min_purchase;
+                
+                $('#promoMessage').text(res.message).removeClass('text-danger').addClass('text-success');
+                renderCart();
+            } else {
+                removePromo();
+                $('#promoMessage').text(res.message).removeClass('text-success').addClass('text-danger');
+            }
+        },
+        error: function() {
+            btn.prop('disabled', false).text('Gunakan');
+            removePromo();
+            $('#promoMessage').text('Terjadi kesalahan').removeClass('text-success').addClass('text-danger');
+        }
+    });
+});
 
 // Show cart modal
 $('#cartBtn').on('click', function() {
@@ -565,6 +666,7 @@ $('#checkoutBtn').on('click', function() {
         table_number: tableNumber,
         payment_method: paymentMethod,
         notes: $('#orderNotes').val().trim(),
+        promo_id: activePromoId,
         menu_items: cart.map(item => ({
             menu_id: item.id,
             qty: item.qty
@@ -599,32 +701,55 @@ $('#checkoutBtn').on('click', function() {
             // Show floating track button
             showTrackingButton();
             
-            // Show QRIS info if payment method is QRIS
-            if (paymentMethod === 'qris') {
-                const totalPrice = response.total_price;
-                const accountNumber = '901567615382';
-                
-                // Display total
-                const formattedTotal = 'Rp ' + totalPrice.toLocaleString('id-ID');
-                $('#qrisTotal').text(formattedTotal);
-                $('#qrisTotal2').text(formattedTotal);
-                
-                // Generate simple QR Code with just account number for easy scanning
-                const qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=180x180&margin=5&data=' + encodeURIComponent(accountNumber);
-                $('#qrisImage').attr('src', qrUrl);
-                
-                // Store data for copy functions
-                window.qrisAmount = totalPrice;
-                window.qrisAccountNumber = accountNumber;
-                
-                $('#qrisInfo').show();
-                $('#normalMessage').hide();
+            // Handle Midtrans Snap for online payment
+            if (paymentMethod === 'qris' && response.snap_token) {
+                if (response.snap_token === 'dummy_token') {
+                    // Simulasi pembayaran
+                    Swal.fire({
+                        title: 'Simulasi Pembayaran QRIS',
+                        text: 'Karena kunci API belum diset, klik OK untuk menyimulasikan pembayaran berhasil.',
+                        icon: 'info',
+                        showCancelButton: true,
+                        confirmButtonText: 'Simulasi Bayar',
+                        cancelButtonText: 'Batal'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            $('#qrisInfo').hide();
+                            $('#normalMessage').html('<i class="fas fa-check-circle text-success"></i> Pembayaran berhasil disimulasikan!').show();
+                            $('#confirmModal').modal('show');
+                        } else {
+                            $('#qrisInfo').hide();
+                            $('#normalMessage').html('<i class="fas fa-clock text-warning"></i> Simulasi dibatalkan. Harap bayar di kasir.').show();
+                            $('#confirmModal').modal('show');
+                        }
+                    });
+                } else {
+                    snap.pay(response.snap_token, {
+                        onSuccess: function(result){
+                            $('#qrisInfo').hide();
+                            $('#normalMessage').html('<i class="fas fa-check-circle text-success"></i> Pembayaran berhasil! Pesanan Anda sedang diproses.').show();
+                            $('#confirmModal').modal('show');
+                        },
+                        onPending: function(result){
+                            $('#qrisInfo').hide();
+                            $('#normalMessage').html('<i class="fas fa-clock text-warning"></i> Menunggu pembayaran. Harap selesaikan pembayaran Anda.').show();
+                            $('#confirmModal').modal('show');
+                        },
+                        onError: function(result){
+                            Swal.fire('Error', 'Pembayaran gagal', 'error');
+                        },
+                        onClose: function(){
+                            $('#qrisInfo').hide();
+                            $('#normalMessage').html('<i class="fas fa-exclamation-triangle text-warning"></i> Anda menutup popup pembayaran. Harap selesaikan pembayaran ke kasir.').show();
+                            $('#confirmModal').modal('show');
+                        }
+                    });
+                }
             } else {
                 $('#qrisInfo').hide();
                 $('#normalMessage').show();
+                $('#confirmModal').modal('show');
             }
-            
-            $('#confirmModal').modal('show');
             
             // Clear form and cart
             cart = [];
@@ -633,6 +758,7 @@ $('#checkoutBtn').on('click', function() {
             $('#tableNumber').val('');
             $('#orderNotes').val('');
             $('#paymentCash').prop('checked', true);
+            removePromo();
             renderCart();
         },
         error: function(xhr) {
